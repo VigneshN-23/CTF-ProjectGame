@@ -1,142 +1,156 @@
 #!/usr/bin/env python3
+import csv
+import random
 import os
 import time
 
-# Colors
+# ---------- Terminal Colors ----------
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 CYAN = "\033[96m"
 RESET = "\033[0m"
 
-def banner():
-    os.system("clear")
-    print(f"{CYAN}========== CTF: TOOL-BASED RECON CHALLENGE =========={RESET}")
-    print(f"{YELLOW}Use real cybersecurity tools on Linux to solve each level.{RESET}")
-    print("Type your answers carefully. Flags follow this format: FLAG{something}\n")
+# ---------- Globals ----------
+score = 0  # MCQ Score
+ctf_score = 0  # CTF Score
 
-def hint(msg):
-    print(f"{YELLOW}[Hint] {msg}{RESET}")
+# ---------- LEVEL 1: MCQ ----------
+def load_questions(filename):
+    questions = []
+    with open(filename, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            questions.append({
+                "question": row["question"],
+                "options": {
+                    'a': row["option_a"],
+                    'b': row["option_b"],
+                    'c': row["option_c"],
+                    'd': row["option_d"],
+                },
+                "answer": row["answer"].strip().lower()
+            })
+    return questions
 
+def ask_mcq(q):
+    global score
+    print(f"\n{CYAN}{q['question']}{RESET}")
+    for key, val in q["options"].items():
+        print(f" {key}) {val}")
+    choice = input(f"{YELLOW}Your answer (a/b/c/d): {RESET}").strip().lower()
+    if choice == q["answer"]:
+        print(f"{GREEN}✅ Correct!{RESET}")
+        score += 10
+    else:
+        print(f"{RED}❌ Incorrect!{RESET}")
+        print(f"The correct answer was: {q['answer']}) {q['options'][q['answer']]}\n")
+
+def level1_mcq():
+    print(f"{CYAN}🎮 Welcome to CyberQuest - Learn Cybersecurity! 🎮{RESET}")
+    print("-------------------------------------------------------------")
+    questions = load_questions("questions.csv")
+    random.shuffle(questions)
+    for q in questions[:5]:
+        ask_mcq(q)
+
+    print("-------------------------------------------------------------")
+    print(f"🏆 Your MCQ score: {score} / 50")
+    if score >= 30:
+        print(f"{GREEN}🔓 You unlocked Level 2 - Recon CTF!{RESET}")
+        return True
+    else:
+        print(f"{RED}🔒 Level 2 Locked. Keep practicing!{RESET}")
+        return False
+
+# ---------- LEVEL 2: RECON CTF ----------
+def hint(msg): print(f"{YELLOW}[Hint] {msg}{RESET}")
 def success(flag):
+    global ctf_score
     print(f"{GREEN}Correct! {flag}{RESET}\n")
-
-def fail():
-    print(f"{RED}Incorrect. Check your tool output and try again.{RESET}\n")
-
+    ctf_score += 1
+def fail(): print(f"{RED}Incorrect. Try again.{RESET}\n")
 def wait(): time.sleep(1)
 
-# ------------------- CHALLENGES -------------------
-
-def level1():
-    print(f"{CYAN}Level 1: WHOIS Recon{RESET}")
-    print("Find the registrar name of the domain 'example.com'.")
-    choice = input(f"{YELLOW}Enter your answer (or type 'hint'): {RESET}")
-
-    if choice.lower().strip() == 'hint':
-        hint("Use: whois example.com | grep Registrar")
-        choice = input(f"{YELLOW}Enter your answer: {RESET}")
-
+def ctf1():
+    print(f"{CYAN}CTF 1: WHOIS Recon{RESET}")
+    print("Find the registrar name of 'example.com'")
+    choice = input(f"{YELLOW}Answer or type 'hint': {RESET}")
+    if choice.strip().lower() == 'hint':
+        hint("Try: whois example.com | grep Registrar")
+        choice = input(f"{YELLOW}Answer: {RESET}")
     if "icann" in choice.lower() or "reserved" in choice.lower():
         success("FLAG{whois_detective}")
-        return True
     else:
         fail()
-        return False
 
-def level2():
-    print(f"{CYAN}Level 2: DNS Subdomain Discovery{RESET}")
-    print("What is the IP address of the subdomain 'shopify.com'?")
-
-    choice = input(f"{YELLOW}Enter the A record IP of 'shopify.com' (or type 'hint'): {RESET}")
-    if choice.lower().strip() == "hint":
-        hint("Use: dig shopify.com +short OR host shopify.com")
-        choice = input(f"{YELLOW}Enter IP: {RESET}")
-
-    valid_prefixes = ["23.227.", "151.101."]
-    if any(choice.startswith(ip) for ip in valid_prefixes):
-        success("FLAG{dns_resolver}")
-        return True
+def ctf2():
+    print(f"{CYAN}CTF 2: DNS A Record Lookup{RESET}")
+    print("Find the IP address of shopify.com")
+    choice = input(f"{YELLOW}Answer or type 'hint': {RESET}")
+    if choice.strip().lower() == 'hint':
+        hint("Try: dig shopify.com +short")
+        choice = input(f"{YELLOW}Answer: {RESET}")
+    if any(choice.startswith(ip) for ip in ["23.227.", "151.101."]):
+        success("FLAG{dns_lookup}")
     else:
         fail()
-        return False
 
-def level3():
-    print(f"{CYAN}Level 3: Email Harvesting{RESET}")
-    print("Find a publicly available email related to 'tryhackme.com'.")
-    choice = input(f"{YELLOW}Enter the email (or type 'hint'): {RESET}")
-
-    if choice.lower().strip() == "hint":
-        hint("Try: theHarvester -d tryhackme.com -b all")
-        choice = input(f"{YELLOW}Enter email found: {RESET}")
-
+def ctf3():
+    print(f"{CYAN}CTF 3: Email Harvesting{RESET}")
+    print("Find an email belonging to tryhackme.com")
+    choice = input(f"{YELLOW}Email or type 'hint': {RESET}")
+    if choice.strip().lower() == 'hint':
+        hint("Use: theHarvester -d tryhackme.com -b all")
+        choice = input(f"{YELLOW}Email: {RESET}")
     if "@tryhackme.com" in choice.lower():
-        success("FLAG{email_sniper}")
-        return True
+        success("FLAG{email_harvest}")
     else:
         fail()
-        return False
 
-def level4():
-    print(f"{CYAN}Level 4: Nmap Basic Recon{RESET}")
-    print("Find one open port on 'scanme.nmap.org'")
-    choice = input(f"{YELLOW}Enter the port number (or type 'hint'): {RESET}")
-
-    if choice.lower().strip() == "hint":
+def ctf4():
+    print(f"{CYAN}CTF 4: Port Scan{RESET}")
+    print("Find one open port on scanme.nmap.org")
+    choice = input(f"{YELLOW}Enter open port or type 'hint': {RESET}")
+    if choice.strip().lower() == 'hint':
         hint("Use: nmap scanme.nmap.org")
-        choice = input(f"{YELLOW}Enter open port: {RESET}")
-
-    valid_ports = ["22", "80"]
-    if choice.strip() in valid_ports:
-        success("FLAG{port_probe}")
-        return True
+        choice = input(f"{YELLOW}Port: {RESET}")
+    if choice.strip() in ["22", "80"]:
+        success("FLAG{open_port}")
     else:
         fail()
-        return False
 
-def level5():
-    print(f"{CYAN}Level 5: NS Lookup Madness{RESET}")
-    print("What are the name servers of 'python.org'?")
-    choice = input(f"{YELLOW}Enter one NS record (or type 'hint'): {RESET}")
-
-    if choice.lower().strip() == "hint":
+def ctf5():
+    print(f"{CYAN}CTF 5: NS Records{RESET}")
+    print("Give one name server of python.org")
+    choice = input(f"{YELLOW}NS record or 'hint': {RESET}")
+    if choice.strip().lower() == 'hint':
         hint("Use: nslookup -type=ns python.org")
-        choice = input(f"{YELLOW}Enter NS record: {RESET}")
-
+        choice = input(f"{YELLOW}NS: {RESET}")
     if "ns" in choice.lower() and ".org" in choice.lower():
-        success("FLAG{ns_lookup_master}")
-        return True
+        success("FLAG{ns_lookup}")
     else:
         fail()
-        return False
 
-# ------------------- GAME FLOW -------------------
-
-def main():
-    banner()
-    score = 0
-    levels = [level1, level2, level3, level4, level5]
-
-    for i, level in enumerate(levels, 1):
-        print(f"{CYAN}--- Challenge {i} ---{RESET}")
-        if level():
-            score += 1
+def level2_ctf():
+    print(f"\n{CYAN}============= LEVEL 2: RECON CTF ============={RESET}")
+    for ctf in [ctf1, ctf2, ctf3, ctf4, ctf5]:
+        ctf()
         wait()
 
-    print(f"\n{GREEN}You solved {score}/{len(levels)} real-world recon challenges!{RESET}")
-    if score == len(levels):
-        print(f"{GREEN}🏁 You are a true Recon Operator! 🏁{RESET}")
-    else:
-        print(f"{YELLOW}Practice more with recon tools and try again!{RESET}")
+    print(f"\n{GREEN}Recon CTF Score: {ctf_score}/5{RESET}")
+    print(f"{CYAN}======== 🧠 What You Learned ========{RESET}")
+    print(f"{YELLOW}WHOIS:{RESET} Used to find domain registrar info")
+    print(f"{YELLOW}DNS Lookup:{RESET} Helps identify infrastructure IPs")
+    print(f"{YELLOW}Email Harvesting:{RESET} Can expose employees to phishing")
+    print(f"{YELLOW}Port Scanning:{RESET} Reveals services like SSH, HTTP")
+    print(f"{YELLOW}NS Records:{RESET} Useful for DNS mapping & hijacking")
+    print(f"{CYAN}====================================={RESET}")
+    print(f"{GREEN}💡 These are real recon steps used in red teaming & bug bounty!{RESET}")
 
-    print(f"\n{CYAN}======== 🧠 What You Learned ========{RESET}")
-    print(f"{YELLOW}Level 1 - WHOIS Recon:{RESET} You learned how attackers identify registrar, admin contact, and expiration info — often used in social engineering or takeover attempts.\n")
-    print(f"{YELLOW}Level 2 - DNS Discovery:{RESET} DNS lookups help identify subdomains and infrastructure IPs. Used for asset mapping in red teaming.\n")
-    print(f"{YELLOW}Level 3 - Email Harvesting:{RESET} Tools like theHarvester automate finding exposed emails that may be used for phishing or brute-force attacks.\n")
-    print(f"{YELLOW}Level 4 - Nmap Scanning:{RESET} Port scanning is foundational to finding exposed services and entry points like SSH, HTTP, or databases.\n")
-    print(f"{YELLOW}Level 5 - NS Lookup:{RESET} Enumerating nameservers helps understand DNS hosting, which is useful in DNS hijacking or misconfiguration discovery.\n")
-    print(f"{CYAN}======================================={RESET}")
-    print(f"{GREEN}💡 Tip: Every recon activity you've done mirrors real steps used in bug bounty, red teaming, or cyber threat hunting.{RESET}")
-
+# ---------- Main ----------
 if __name__ == "__main__":
-    main()
+    os.system("clear")
+    passed_mcq = level1_mcq()
+    if passed_mcq:
+        level2_ctf()
