@@ -63,7 +63,7 @@ def level1_mcq():
         print(f"{RED}🔒 Level 2 Locked. Keep practicing!{RESET}")
         return False
 
-# ---------- LEVEL 2: RECON CTF ----------
+# ---------- LEVEL 2: RECON CTF (Windows Commands) ----------
 def hint(msg): print(f"{YELLOW}[Hint] {msg}{RESET}")
 def success(flag):
     global ctf_score
@@ -73,23 +73,23 @@ def fail(): print(f"{RED}Incorrect. Try again.{RESET}\n")
 def wait(): time.sleep(1)
 
 def ctf1():
-    print(f"{CYAN}CTF 1: WHOIS Recon{RESET}")
+    print(f"{CYAN}CTF 1: WHOIS Recon (Windows){RESET}")
     print("Find the registrar name of 'example.com'")
     choice = input(f"{YELLOW}Answer or type 'hint': {RESET}")
     if choice.strip().lower() == 'hint':
-        hint("Try: whois example.com | grep Registrar")
+        hint("Use PowerShell: (Invoke-RestMethod https://rdap.org/domain/example.com).entities")
         choice = input(f"{YELLOW}Answer: {RESET}")
-    if "icann" in choice.lower() or "reserved" in choice.lower():
+    if "iana" in choice.lower() or "reserved" in choice.lower():
         success("FLAG{whois_detective}")
     else:
         fail()
 
 def ctf2():
-    print(f"{CYAN}CTF 2: DNS A Record Lookup{RESET}")
+    print(f"{CYAN}CTF 2: DNS A Record Lookup (Windows){RESET}")
     print("Find the IP address of shopify.com")
     choice = input(f"{YELLOW}Answer or type 'hint': {RESET}")
     if choice.strip().lower() == 'hint':
-        hint("Try: dig shopify.com +short")
+        hint("Use: nslookup shopify.com")
         choice = input(f"{YELLOW}Answer: {RESET}")
     if any(choice.startswith(ip) for ip in ["23.227.", "151.101."]):
         success("FLAG{dns_lookup}")
@@ -101,7 +101,7 @@ def ctf3():
     print("Find an email belonging to tryhackme.com")
     choice = input(f"{YELLOW}Email or type 'hint': {RESET}")
     if choice.strip().lower() == 'hint':
-        hint("Use: theHarvester -d tryhackme.com -b all")
+        hint("Use online services like Hunter.io or search 'tryhackme.com' emails on Google.")
         choice = input(f"{YELLOW}Email: {RESET}")
     if "@tryhackme.com" in choice.lower():
         success("FLAG{email_harvest}")
@@ -109,11 +109,11 @@ def ctf3():
         fail()
 
 def ctf4():
-    print(f"{CYAN}CTF 4: Port Scan{RESET}")
+    print(f"{CYAN}CTF 4: Port Scan (Windows){RESET}")
     print("Find one open port on scanme.nmap.org")
     choice = input(f"{YELLOW}Enter open port or type 'hint': {RESET}")
     if choice.strip().lower() == 'hint':
-        hint("Use: nmap scanme.nmap.org")
+        hint("Use: nmap scanme.nmap.org (install Nmap for Windows first)")
         choice = input(f"{YELLOW}Port: {RESET}")
     if choice.strip() in ["22", "80"]:
         success("FLAG{open_port}")
@@ -121,7 +121,7 @@ def ctf4():
         fail()
 
 def ctf5():
-    print(f"{CYAN}CTF 5: NS Records{RESET}")
+    print(f"{CYAN}CTF 5: NS Records (Windows){RESET}")
     print("Give one name server of python.org")
     choice = input(f"{YELLOW}NS record or 'hint': {RESET}")
     if choice.strip().lower() == 'hint':
@@ -140,17 +140,17 @@ def level2_ctf():
 
     print(f"\n{GREEN}Recon CTF Score: {ctf_score}/5{RESET}")
     print(f"{CYAN}======== 🧠 What You Learned ========{RESET}")
-    print(f"{YELLOW}WHOIS:{RESET} Used to find domain registrar info")
-    print(f"{YELLOW}DNS Lookup:{RESET} Helps identify infrastructure IPs")
-    print(f"{YELLOW}Email Harvesting:{RESET} Can expose employees to phishing")
-    print(f"{YELLOW}Port Scanning:{RESET} Reveals services like SSH, HTTP")
-    print(f"{YELLOW}NS Records:{RESET} Useful for DNS mapping & hijacking")
+    print(f"{YELLOW}WHOIS:{RESET} Use PowerShell or RDAP queries for domain info")
+    print(f"{YELLOW}DNS Lookup:{RESET} Use nslookup in Windows")
+    print(f"{YELLOW}Email Harvesting:{RESET} Use tools like Hunter, Google Dorks")
+    print(f"{YELLOW}Port Scanning:{RESET} Use Nmap (Windows version available)")
+    print(f"{YELLOW}NS Records:{RESET} nslookup supports all DNS queries")
     print(f"{CYAN}====================================={RESET}")
     print(f"{GREEN}💡 These are real recon steps used in red teaming & bug bounty!{RESET}")
 
 # ---------- Main ----------
 if __name__ == "__main__":
-    os.system("clear")
+    os.system("cls" if os.name == "nt" else "clear")
     passed_mcq = level1_mcq()
     if passed_mcq:
         level2_ctf()
